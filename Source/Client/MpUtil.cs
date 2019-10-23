@@ -114,20 +114,32 @@ namespace Multiplayer.Client
         }
 
         // https://stackoverflow.com/a/27376368
-        public static string GetLocalIpAddress()
+        public static string GetLocalIpAddress(int iteration = 0)
         {
             try
             {
-                using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.IP))
+                switch (iteration)
                 {
-                    socket.Connect("8.8.8.8", 65530);
-                    IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
-                    return endPoint.Address.ToString();
+                    case 0:
+                        using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.IP))
+                        {
+                            socket.Connect("1.0.0.1", 80);
+                            IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
+                            return endPoint.Address.ToString();
+                        }
+                    case 1:
+                        return Dns.GetHostEntry(Dns.GetHostName()).AddressList.FirstOrDefault(i => i.AddressFamily == AddressFamily.InterNetwork).ToString();
+                    default:
+                        return "0.0.0.0";
                 }
             }
             catch
             {
-                return Dns.GetHostEntry(Dns.GetHostName()).AddressList.FirstOrDefault(i => i.AddressFamily == AddressFamily.InterNetwork).ToString();
+                if (iteration > 5)
+                {
+                    return "127.0.0.1";
+                }
+                return GetLocalIpAddress(iteration + 1);
             }
         }
 
